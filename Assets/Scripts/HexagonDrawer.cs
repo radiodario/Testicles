@@ -34,6 +34,7 @@ public class HexagonDrawer : MonoBehaviour
 		Vector3[] ForcePositions = new Vector3[rows * cols * 2];
 		Vector3[] hexCentres = new Vector3[rows * cols];
 
+
 		int idx = 0;
 	
 
@@ -45,7 +46,7 @@ public class HexagonDrawer : MonoBehaviour
 										0
 				                   );
 
-				Vector3 pos1 = new Vector3 (
+				Vector4 pos1 = new Vector3 (
 					               hexCentre.x,
 					               hexCentre.y + (s),
 					               0
@@ -57,7 +58,7 @@ public class HexagonDrawer : MonoBehaviour
 				Vector3 pos2;
 				if (i % 2 == 0) {
 					// top left
-					pos2 = new Vector3 (
+					pos2 = new Vector4 (
 						hexCentre.x - a,
 						hexCentre.y + s / 2,
 						0
@@ -72,7 +73,6 @@ public class HexagonDrawer : MonoBehaviour
 				}
 
 				ForcePositions [idx + 1] = pos2;
-
 				idx += 2;
 
 			}
@@ -104,7 +104,7 @@ public class HexagonDrawer : MonoBehaviour
 		red = (index % side) / (float) side;
 		green = (index / side) / (float) side;
 
-		return new Color (red, green, 0, 1);
+		return new Color (red, green, 0, index % 2);
 	}
 
 

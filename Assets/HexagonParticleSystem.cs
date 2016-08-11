@@ -14,14 +14,22 @@ public class HexagonParticleSystem : MonoBehaviour {
 	[SerializeField]
 	Vector3 _emitterSize = Vector3.one * 20;
 
+	[Range(1, 100)]
 	public int Scale = 10;
+	[Range(0, 100)]
 	public int CurrentLife = 10;
 
+	[Range(0.001f, 1)]
 	public float xINC = 0.1f;
+	[Range(0.001f, 1)]
 	public float yINC = 0.1f;
+	[Range(0.001f, 1)]
 	public float zINC = 0.1f;
 
+	[Range(0, 200)]
 	public float MaxSpeed = 20;
+	[Range(0, 200)]
+	public float ForceMultiplier = 1;
 
 	[SerializeField]
 	bool _debug;
@@ -143,6 +151,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 	void UpdateForceKernelShader() {
 		var m = _forceKernelMaterial;
 		m.SetVector ("_NoiseParams", new Vector4 (xINC, yINC, zINC, deltaTime));
+		m.SetInt ("_ForceSide", (int)Mathf.Sqrt (HexagonDrawer.NumberOfForces (Width, Height, Scale).x)); 
 	}
 
 	void UpdateVelocityKernelShader() {
@@ -150,6 +159,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 		m.SetTexture ("_ParticlePositions", _positionBuffer2);
 		m.SetTexture ("_ForceIndices", _forceLookupBuffer);
 		m.SetTexture ("_ForceValues", _forceValuesBuffer);
+		m.SetFloat ("_ForceMultiplier", ForceMultiplier);
 		m.SetFloat ("_MaxSpeed", MaxSpeed);
 		m.SetVector("_Config", new Vector4(Width, Height, CurrentLife, deltaTime));
 	}

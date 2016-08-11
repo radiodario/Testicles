@@ -5,6 +5,7 @@
 		_ForceIndices ("-", 2D) = "" {}
 		_ForceValues ("-", 2D) = "" {}
 		_MaxSpeed ("Max Speed", float) = 10
+		_ForceMultiplier ("Force Multiplier", float) = 0
 		_Config ("-", Vector) = (1000, 800, 0, 0) // width, height, life, dt)
 	}
 
@@ -20,7 +21,7 @@
 
 	float4 _Config;
 	float _MaxSpeed;
-
+	float _ForceMultiplier;
 	// PRNG function.
     float nrand(float2 uv, float salt)
     {
@@ -46,18 +47,19 @@
 		float4 f = find_force_for(p);
 
 		if (p.w > 0) {
-			pv += f; 
-			//pv = normalize(pv) * _MaxSpeed;
+			pv += (f * _ForceMultiplier); 
+			pv = normalize(pv) * _MaxSpeed;
 			return pv;
 		} else {
 			// return no speed?
-			//return float4(nrand(i.uv, _Time.x+1) * 2 - 1, nrand(i.uv, _Time.y+1) * 2 - 1, 0, 0);
-			return float4(0, 0, 0, 0);
+			return float4(nrand(i.uv, _Time.x+1) * 2 - 1, nrand(i.uv, _Time.y+1) * 2 - 1, 0, 0);
+			//return float4(0, 0, 0, 0);
 		}
 	}
 
 	float4 frag_init(v2f_img i) : SV_Target {
-		return float4(0, 0, 0, 0);
+			return float4(nrand(i.uv, _Time.x+1) * 2 - 1, nrand(i.uv, _Time.y+1) * 2 - 1, 0, 0);
+			//return float4(0, 0, 0, 0);
 	}
 
 	ENDCG
