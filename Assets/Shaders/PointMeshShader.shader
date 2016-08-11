@@ -14,8 +14,8 @@
 
     #include "UnityCG.cginc"
 
-    sampler2D _ParticlePositions;
-    sampler2D _ParticleVelocities;
+    sampler2D _ParticlePositions1;
+    sampler2D _ParticlePositions2;
 
     float4 _ParticleTex1_TexelSize;
 
@@ -42,8 +42,8 @@
 
         float2 uv = v.texcoord.xy + _ParticleTex1_TexelSize.xy / 2;
 
-		float4 p1 = tex2Dlod(_ParticleTex1, float4(uv, 0, 0));
-        float4 p2 = tex2Dlod(_ParticleTex2, float4(uv, 0, 0));
+		float4 p1 = tex2Dlod(_ParticlePositions1, float4(uv, 0, 0));
+        float4 p2 = tex2Dlod(_ParticlePositions2, float4(uv, 0, 0));
         float sw = v.position.x;
 
       	if (p1.w < 0)
@@ -56,8 +56,8 @@
             o.position = mul(UNITY_MATRIX_MVP, float4(p, 1));
         }
 
-        o.color = float4(1, 1, 1, 0);
-        o.color.a = p.s;
+        o.color = float4(1, 1, 1, 1);
+        o.color.a *= sw;
 
         UNITY_TRANSFER_FOG(o, o.position);
 

@@ -15,6 +15,7 @@ Shader "Custom/Debug"
     {
         float3 c = tex2D(_MainTex, i.uv).xyz;
         return float4(c * 0.5 + 0.5, 1);
+        //return float4(c, 1);
     }
 
     ENDCG

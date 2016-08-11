@@ -5,7 +5,7 @@
 		_ForceIndices ("-", 2D) = "" {}
 		_ForceValues ("-", 2D) = "" {}
 		_MaxSpeed ("Max Speed", float) = 10
-		_Config ("-", Vector) = (1000, 2000, 0, 0) // width, height, life, dt)
+		_Config ("-", Vector) = (1000, 800, 0, 0) // width, height, life, dt)
 	}
 
 	CGINCLUDE
@@ -21,14 +21,19 @@
 	float4 _Config;
 	float _MaxSpeed;
 
+	// PRNG function.
+    float nrand(float2 uv, float salt)
+    {
+        uv += float2(salt, _Config.z);
+        return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
+    }
 
 	float4 find_force_for(float4 particle) {
 
 		float2 pUV;
-		int w = _Config.r;
-		int h = _Config.g;
-		pUV.x = particle.x / w;
-		pUV.y = particle.y / h;
+		pUV.x = particle.x / _Config.x;
+		pUV.y = particle.y / _Config.y;
+		
 
 		float4 forceUVEncoded = tex2D(_ForceIndices, pUV);
 		float2 forceUV = forceUVEncoded.rg;
@@ -42,10 +47,11 @@
 
 		if (p.w > 0) {
 			pv += f; 
-			pv = normalize(pv) * _MaxSpeed;
+			//pv = normalize(pv) * _MaxSpeed;
 			return pv;
 		} else {
 			// return no speed?
+			//return float4(nrand(i.uv, _Time.x+1) * 2 - 1, nrand(i.uv, _Time.y+1) * 2 - 1, 0, 0);
 			return float4(0, 0, 0, 0);
 		}
 	}

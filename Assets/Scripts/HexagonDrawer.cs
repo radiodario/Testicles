@@ -17,7 +17,7 @@ public class HexagonDrawer : MonoBehaviour
 
 	}
 
-	public static RenderTexture DrawHexagonSurface(int width, int height, int scale) {
+	public static Texture2D DrawHexagonSurface(int width, int height, int scale) {
 
 		KDTree searcher;
 
@@ -28,7 +28,7 @@ public class HexagonDrawer : MonoBehaviour
 		int rows = (int)Mathf.Floor ((height / s / 3) * 2) + 1;
 
 	
-		Texture2D positionTexture = new Texture2D(width, height, TextureFormat.ARGB32, false);
+		Texture2D positionTexture = new Texture2D (width, height, TextureFormat.ARGB32, false);
 		RenderTexture outTexture = new RenderTexture(width, height, 32, RenderTextureFormat.ARGB32);
 
 		Vector3[] ForcePositions = new Vector3[rows * cols * 2];
@@ -85,25 +85,26 @@ public class HexagonDrawer : MonoBehaviour
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
 				int forceIndex = searcher.FindNearest (new Vector3 (x, y, 0));
-				colors[cIdx] = HexagonDrawer.indexToColor(forceIndex);
+				colors[cIdx] = HexagonDrawer.indexToColor(forceIndex, ForcePositions.Length);
 				cIdx++;
 			}
 		}
 		positionTexture.SetPixels(colors);
-		Graphics.Blit (positionTexture, outTexture);
+		positionTexture.Apply ();
 
-		return outTexture;
+		return positionTexture;
 
 	}
 
-	private static Color indexToColor(int index) {
-		int red;
-		int green;
+	private static Color indexToColor(int index, int numForces) {
+		float red;
+		float green;
 
-		red = (int)(index / 256);
-		green = index % 256;
+		int side = (int) Mathf.Sqrt (numForces);
+		red = (index % side) / (float) side;
+		green = (index / side) / (float) side;
 
-		return new Color (red, green, 0, 0);
+		return new Color (red, green, 0, 1);
 	}
 
 

@@ -9,10 +9,10 @@ public class HexagonParticleSystem : MonoBehaviour {
 	public int Height = 800;
 
 	[SerializeField]
-	Vector3 _emitterPosition = Vector3.forward * Width;
+	Vector3 _emitterPosition = Vector3.forward * 40;
 
 	[SerializeField]
-	Vector3 _emitterSize = Vector3.one * Height;
+	Vector3 _emitterSize = Vector3.one * 20;
 
 	public int Scale = 10;
 	public int CurrentLife = 10;
@@ -37,7 +37,7 @@ public class HexagonParticleSystem : MonoBehaviour {
     }
 
 	RenderTexture _forceValuesBuffer;
-	RenderTexture _forceLookupBuffer;
+	Texture2D _forceLookupBuffer;
 
 	RenderTexture _positionBuffer1;
 	RenderTexture _positionBuffer2;
@@ -142,7 +142,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 
 	void UpdateForceKernelShader() {
 		var m = _forceKernelMaterial;
-		m.SetVector ("_Config", new Vector4 (xINC, yINC, zINC, deltaTime));
+		m.SetVector ("_NoiseParams", new Vector4 (xINC, yINC, zINC, deltaTime));
 	}
 
 	void UpdateVelocityKernelShader() {
@@ -309,7 +309,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 			if (_debugMaterial && _forceLookupBuffer)
 			{
 				var rect = new Rect(0, (128 + 10) * 3, 512, 128);
-				Graphics.DrawTexture(rect, _forceLookupBuffer, _debugMaterial);
+				Graphics.DrawTexture(rect, _forceLookupBuffer);
 			}
 	    }
 	}

@@ -28,8 +28,8 @@
         float t = _Time.x;
 
         // Random position.
-        float3 p = float3(nrand(uv, t + 1), nrand(uv, t + 2), nrand(uv, t + 3));
-
+//        float3 p = float3(nrand(uv, t + 1), nrand(uv, t + 2), 0);
+		float3 p = float3(.5, .5, 0);
         p.x *= _Config.x;
         p.y *= _Config.y;
 
@@ -45,7 +45,8 @@
 
 		if (p.w > 0) {
 			float dt = _Config.w;
-			p.xyz += pv.xyz * dt;
+			p.xy += pv.xy * dt;
+			p.z = 0;
 			p.w -= dt;
 			return p;
 		} else {
