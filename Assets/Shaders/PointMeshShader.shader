@@ -57,7 +57,7 @@
         }
 
         o.color = float4(1, 1, 1, 1);
-        o.color.a *= sw;
+        o.color.a *= 1;
 
         UNITY_TRANSFER_FOG(o, o.position);
 

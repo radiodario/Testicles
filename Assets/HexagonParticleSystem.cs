@@ -31,6 +31,9 @@ public class HexagonParticleSystem : MonoBehaviour {
 	[Range(0, 200)]
 	public float ForceMultiplier = 1;
 
+	[Range(0, 100)]
+	public int MaxTrails = 3;
+
 	[SerializeField]
 	bool _debug;
 
@@ -46,6 +49,10 @@ public class HexagonParticleSystem : MonoBehaviour {
 
 	RenderTexture _forceValuesBuffer;
 	Texture2D _forceLookupBuffer;
+
+	RenderTexture[] _positionBuffers;
+
+	int CurrentBufferPointer;
 
 	RenderTexture _positionBuffer1;
 	RenderTexture _positionBuffer2;
@@ -65,6 +72,8 @@ public class HexagonParticleSystem : MonoBehaviour {
 
 	// this updates the positions of the particles, and renders
 	Material _positionKernelMaterial;
+
+	Material[] _drawTrailsMaterials;
 
 	Material _drawTextureMaterial;
 
@@ -138,13 +147,16 @@ public class HexagonParticleSystem : MonoBehaviour {
 		Graphics.Blit(null, _forceValuesBuffer, _forceKernelMaterial, 0);
 		Graphics.Blit(null, _positionBuffer2, _positionKernelMaterial, 0);
 		Graphics.Blit(null, _velocityBuffer2, _velocityKernelMaterial, 0);
+		CycleBuffers (_positionBuffer2);
 
 		// execute the kernels a few times
-		for (var i = 0; i < 8; i++) {
+		for (var i = 0; i < 10; i++) {
 			Graphics.Blit (_velocityBuffer2, _velocityBuffer1, _velocityKernelMaterial, 1);
 			Graphics.Blit (_positionBuffer2, _positionBuffer1, _positionKernelMaterial, 1);
+			CycleBuffers (_positionBuffer1);
 			Graphics.Blit (_velocityBuffer1, _velocityBuffer2, _velocityKernelMaterial, 1);
 			Graphics.Blit (_positionBuffer1, _positionBuffer2, _positionKernelMaterial, 1);
+			CycleBuffers (_positionBuffer2);
 		}
 	}
 
@@ -201,12 +213,25 @@ public class HexagonParticleSystem : MonoBehaviour {
 		if (_displayBuffer2)
 			DestroyImmediate (_displayBuffer2);
 
+		_positionBuffers = new RenderTexture[MaxTrails];
+
+
 		GenerateForceLookupTexture ();
 
 		int BufferWidth = (int)Mathf.Sqrt (MaxParticles);
 
 		// Mesh object.
 		if (_mesh == null) _mesh = CreateMesh(BufferWidth, BufferWidth);
+
+		_drawTrailsMaterials = new Material[MaxTrails];
+
+		for (var i = 0; i < MaxTrails; i++) {
+			DestroyImmediate (_positionBuffers [i]);
+			_positionBuffers [i] = CreateBuffer (BufferWidth);
+			if (!_drawTrailsMaterials [i]) {
+				_drawTrailsMaterials [i] = CreateMaterial (Shader.Find ("Custom/PointMeshShader"));
+			}
+		}
 
 		_positionBuffer1 = CreateBuffer (BufferWidth);
 		_positionBuffer2 = CreateBuffer (BufferWidth);
@@ -234,12 +259,21 @@ public class HexagonParticleSystem : MonoBehaviour {
 		if (!_drawTextureMaterial)
 			_drawTextureMaterial = CreateMaterial (Shader.Find ("Custom/PointMeshShader"));
 
+
+
 		// warm up
 		UpdateKernelShaders();
 		InitializeAndPrewarmBuffers ();
 
 		_needsReset = false;
 
+	}
+
+	void CycleBuffers(RenderTexture newBuffer) {
+		for (var i = MaxTrails - 1; i > 0; i--) {
+			Graphics.Blit (_positionBuffers [i - 1], _positionBuffers [i]);
+		}
+		Graphics.Blit (newBuffer, _positionBuffers [0]);
 	}
 
 	void Reset() {
@@ -282,17 +316,28 @@ public class HexagonParticleSystem : MonoBehaviour {
 			// apply the position kernel
 			Graphics.Blit(_positionBuffer1, _positionBuffer2, _positionKernelMaterial, 1);
 
+			CycleBuffers (_positionBuffer2);
+
 		} else {
 			InitializeAndPrewarmBuffers();
 		}
 
 		// draw the particles to a texture;
-		_drawTextureMaterial.SetTexture("_ParticlePositions1", _positionBuffer1);
-		_drawTextureMaterial.SetTexture ("_ParticlePositions2", _positionBuffer2);
-		_drawTextureMaterial.SetInt ("_ParticleSide", (int)Mathf.Sqrt (MaxParticles));
-		_drawTextureMaterial.SetFloat ("_ParticleRadius", 0.02f);
-		_drawTextureMaterial.SetVector ("_Resolution", new Vector2 (Height, Width));
-		Graphics.DrawMesh(_mesh, transform.position, transform.rotation, _drawTextureMaterial, 0);
+		for (var i = 0; i < MaxTrails - 1; i++) {
+			Material dtm = _drawTrailsMaterials[i];
+			dtm.SetTexture("_ParticlePositions1", _positionBuffers[i+1]);
+			dtm.SetTexture ("_ParticlePositions2", _positionBuffers[i]);
+			dtm.SetInt ("_ParticleSide", (int)Mathf.Sqrt (MaxParticles));
+			dtm.SetFloat ("_ParticleRadius", 0.02f);
+			dtm.SetVector ("_Resolution", new Vector2 (Height, Width));
+			Graphics.DrawMesh(_mesh, transform.position, transform.rotation, dtm, 0);
+		}
+//		_drawTextureMaterial.SetTexture("_ParticlePositions1", _positionBuffer1);
+//		_drawTextureMaterial.SetTexture ("_ParticlePositions2", _positionBuffer2);
+//		_drawTextureMaterial.SetInt ("_ParticleSide", (int)Mathf.Sqrt (MaxParticles));
+//		_drawTextureMaterial.SetFloat ("_ParticleRadius", 0.02f);
+//		_drawTextureMaterial.SetVector ("_Resolution", new Vector2 (Height, Width));
+//		Graphics.DrawMesh(_mesh, transform.position, transform.rotation, _drawTextureMaterial, 0);
 	}
 
 	void OnGUI() {

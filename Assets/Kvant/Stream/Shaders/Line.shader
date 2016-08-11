@@ -53,20 +53,20 @@ Shader "Hidden/Kvant/Stream/Line"
         float4 p2 = tex2Dlod(_ParticleTex2, float4(uv, 0, 0));
         float sw = v.position.x;
 
-        if (p1.w < 0)
-        {
+//        if (p1.w < 0)
+//        {
             o.position = mul(UNITY_MATRIX_MVP, float4(p2.xyz, 1));
-        }
-        else
-        {
-            float3 p = lerp(p2.xyz, p1.xyz, (1.0 - sw) * _Tail);
-            o.position = mul(UNITY_MATRIX_MVP, float4(p, 1));
-        }
+//        }
+//        else
+//        {
+//            float3 p = lerp(p2.xyz, p1.xyz, (1.0 - sw) * 1);
+//            o.position = mul(UNITY_MATRIX_MVP, float4(p, 1));
+//        }
 
         o.color = _Color;
         o.color.a *= sw;
 
-        UNITY_TRANSFER_FOG(o, o.position);
+        //UNITY_TRANSFER_FOG(o, o.position);
 
         return o;
     }
