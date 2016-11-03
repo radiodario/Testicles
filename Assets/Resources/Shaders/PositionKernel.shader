@@ -3,6 +3,8 @@
 		_MainTex ("-", 2D) = "" {}
 		_ParticleVelocities ("-", 2D) = "" {}
 		_Config ("-", Vector) = (1000, 2000, 0, 0) // width, height, life, dt)
+		_Decay ("-", Float) = 0.0
+		_EmitterPos ("-", Vector) = (0, 0, 0, 0)
 	}
 
 	CGINCLUDE
@@ -14,6 +16,8 @@
 	sampler2D _ParticleVelocities;
 
 	float4 _Config;
+	float3 _EmitterPos;
+	float _Decay;
 
 	// PRNG function.
     float nrand(float2 uv, float salt)
@@ -29,12 +33,12 @@
 
         // Random position.
 //        float3 p = float3(nrand(uv, t + 1), nrand(uv, t + 2), 0);
-		float3 p = float3(.5, .5, 0);
+		float3 p = float3(_EmitterPos.x, _EmitterPos.y, 0);
         p.x *= _Config.x;
         p.y *= _Config.y;
 
         // Life duration.
-        float l = _Config.z * (0.5 + nrand(uv, t + 0));
+        float l = _Config.z * (nrand(uv, t + 4) * 2) - 1;
 
         return float4(p, l);
     }
@@ -47,7 +51,7 @@
 			float dt = _Config.w;
 			p.xy += pv.xy * dt;
 			p.z = 0;
-			p.w -= dt;
+			p.w -= _Decay;
 			return p;
 		} else {
 			

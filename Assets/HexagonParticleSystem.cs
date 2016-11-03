@@ -9,7 +9,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 	public int Height = 800;
 
 	[SerializeField]
-	Vector3 _emitterPosition = Vector3.forward * 40;
+	Vector3 _emitterPosition = Vector3.forward;
 
 	[SerializeField]
 	Vector3 _emitterSize = Vector3.one * 20;
@@ -18,6 +18,9 @@ public class HexagonParticleSystem : MonoBehaviour {
 	public int Scale = 10;
 	[Range(0, 100)]
 	public int CurrentLife = 10;
+
+	[Range(0.001f, 1f)]
+	public float LifeDecay = 0.5f;
 
 	[Range(0.001f, 1)]
 	public float xINC = 0.1f;
@@ -31,8 +34,21 @@ public class HexagonParticleSystem : MonoBehaviour {
 	[Range(0, 200)]
 	public float ForceMultiplier = 1;
 
-	[Range(0, 100)]
+	[Range(0, 50)]
 	public int MaxTrails = 3;
+
+	[Range(0, 5)]
+	public float bloom = 5; 
+	[Range(0, 1)]
+	public float hue = 1;
+	[Range(0, 1)]
+	public float birthPositionOffsetY = 0.5f;
+	[Range(0, 100)]
+	public float localForce = 0;
+	[Range(-1, 1)]
+	public float noiseTimeOffset = 0;
+	[Range(0, 1)]
+	public float spreadFactor = 0;
 
 	[SerializeField]
 	bool _debug;
@@ -179,7 +195,11 @@ public class HexagonParticleSystem : MonoBehaviour {
 	void UpdatePositionKernelShader() {
 		var m = _positionKernelMaterial;
 		m.SetTexture ("_ParticleVelocities", _velocityBuffer2);
+		Vector3 offsetPos = _emitterPosition;
+		offsetPos.y += this.birthPositionOffsetY;
+		m.SetVector ("_EmitterPos", offsetPos);
 		m.SetVector("_Config", new Vector4(Width, Height, CurrentLife, deltaTime));
+		m.SetFloat ("_Decay", this.LifeDecay);
 	}
 
 	void GenerateForceLookupTexture() {
@@ -213,7 +233,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 		if (_displayBuffer2)
 			DestroyImmediate (_displayBuffer2);
 
-		_positionBuffers = new RenderTexture[MaxTrails];
+		_positionBuffers = new RenderTexture[50];
 
 
 		GenerateForceLookupTexture ();
@@ -223,9 +243,9 @@ public class HexagonParticleSystem : MonoBehaviour {
 		// Mesh object.
 		if (_mesh == null) _mesh = CreateMesh(BufferWidth, BufferWidth);
 
-		_drawTrailsMaterials = new Material[MaxTrails];
+		_drawTrailsMaterials = new Material[50];
 
-		for (var i = 0; i < MaxTrails; i++) {
+		for (var i = 0; i < 50; i++) {
 			DestroyImmediate (_positionBuffers [i]);
 			_positionBuffers [i] = CreateBuffer (BufferWidth);
 			if (!_drawTrailsMaterials [i]) {
@@ -270,7 +290,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 	}
 
 	void CycleBuffers(RenderTexture newBuffer) {
-		for (var i = MaxTrails - 1; i > 0; i--) {
+		for (var i = 50 - 1; i > 0; i--) {
 			Graphics.Blit (_positionBuffers [i - 1], _positionBuffers [i]);
 		}
 		Graphics.Blit (newBuffer, _positionBuffers [0]);
@@ -313,10 +333,11 @@ public class HexagonParticleSystem : MonoBehaviour {
 			_positionBuffer1 = _positionBuffer2;
 			_positionBuffer2 = tempP;
 
+			CycleBuffers (_positionBuffer2);
+
 			// apply the position kernel
 			Graphics.Blit(_positionBuffer1, _positionBuffer2, _positionKernelMaterial, 1);
 
-			CycleBuffers (_positionBuffer2);
 
 		} else {
 			InitializeAndPrewarmBuffers();
@@ -330,6 +351,7 @@ public class HexagonParticleSystem : MonoBehaviour {
 			dtm.SetInt ("_ParticleSide", (int)Mathf.Sqrt (MaxParticles));
 			dtm.SetFloat ("_ParticleRadius", 0.02f);
 			dtm.SetVector ("_Resolution", new Vector2 (Height, Width));
+			dtm.SetFloat ("_Hue", this.hue);
 			Graphics.DrawMesh(_mesh, transform.position, transform.rotation, dtm, 0);
 		}
 //		_drawTextureMaterial.SetTexture("_ParticlePositions1", _positionBuffer1);
@@ -367,6 +389,28 @@ public class HexagonParticleSystem : MonoBehaviour {
 				Graphics.DrawTexture(rect, _forceLookupBuffer);
 			}
 	    }
+	}
+
+	public void SetState(EmitterState state, GlobalState gstate) {
+		this.xINC = gstate.XINC;
+		this.yINC = gstate.YINC;
+		this.zINC = gstate.ZINC;
+		this.MaxTrails = (int) state.ParticleTrail;
+		this.CurrentLife = (int)state.CurrentLife;
+		this.LifeDecay = state.LifeDecay;
+		this.bloom = state.Bloom;
+		this.hue = state.Hue;
+		this.birthPositionOffsetY = state.BirthPositionOffsetY;
+		this.localForce = state.LocalForce;
+		this.noiseTimeOffset = state.NoiseTimeOffset;
+		this.spreadFactor = state.SpreadFactor;
+		this.MaxSpeed = state.MaxSpeed;
+		this.ForceMultiplier = state.Force;
+		this.Scale = gstate.GridScale;
+		if (gstate.dirty) {
+			Reset ();
+			gstate.dirty = false;
+		}
 	}
 
 	void OnDrawGizmosSelected()

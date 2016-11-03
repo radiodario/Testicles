@@ -44,16 +44,21 @@
 	float4 frag(v2f_img i) : SV_Target {
 		float4 pv = tex2D(_MainTex, i.uv);
 		float4 p = tex2D(_ParticlePositions, i.uv);
-		float4 f = find_force_for(p);
+		float4 f = find_force_for(p) * (1 + _ForceMultiplier);
 
+		float spd = sqrt(_MaxSpeed);
 		if (p.w > 0) {
-			pv += (f * _ForceMultiplier); 
-			pv = normalize(pv) * _MaxSpeed;
+			pv += f;
+			float l = length(pv);
+			pv *= _MaxSpeed/l * (float)(l/_MaxSpeed > 1.0) + 1.0 * (float)(l/_MaxSpeed <= 1.0);//clamp(f, -_ForceMultiplier, _ForceMultiplier);
+			//pv *= _MaxSpeed;
+			//pv = clamp(pv, -spd, spd); 
 			return pv;
 		} else {
 			// return no speed?
-			return float4(nrand(i.uv, _Time.x+1) * 2 - 1, nrand(i.uv, _Time.y+1) * 2 - 1, 0, 0);
+			float4 f = float4(nrand(i.uv, _Time.x+1) * 2 - 1, nrand(i.uv, _Time.y+1) * 2 - 1, 0, 0);
 			//return float4(0, 0, 0, 0);
+			return f;
 		}
 	}
 

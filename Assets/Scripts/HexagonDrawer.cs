@@ -101,10 +101,14 @@ public class HexagonDrawer : MonoBehaviour
 		float green;
 
 		int side = (int) Mathf.Sqrt (numForces);
-		red = (index % side) / (float) side;
-		green = (index / side) / (float) side;
+		red = (index % side);
+		green = (index / side);
 
-		return new Color (red, green, 0, index % 2);
+		Vector2 v = new Vector2 (red, green);
+
+		v.Normalize ();
+
+		return new Color (v.x, v.y, 0, index % 2);
 	}
 
 
