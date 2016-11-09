@@ -3,7 +3,7 @@ using System.Collections;
 
 public class HexagonParticleSystem : MonoBehaviour {
 
-	public int MaxParticles = 32768;
+	public int MaxParticles = 1000;
 
 	public int Width = 1000;
 	public int Height = 800;

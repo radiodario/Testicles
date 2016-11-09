@@ -71,7 +71,7 @@
         }
 
         o.color = HSVtoRGB(float3(_Hue, 0.01, 1)); 
-        o.color.a = 0.1;
+        o.color.a = 0.4;
 
         UNITY_TRANSFER_FOG(o, o.position);
 
